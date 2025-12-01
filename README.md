@@ -26,13 +26,19 @@ npm install
 
 ### 3. Configure Environment Variables
 
-Create a `.env.local` file in the project root and add your database connection string:
+Create a `.env.local` file in the project root and add your database connection strings:
 
 ```
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[YOUR-PROJECT-REF].supabase.co:5432/postgres
+# For local development (direct connection)
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres
+
+# Optional: only needed for migrations
+DIRECT_URL=postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres
 ```
 
 **Important:** Replace `[YOUR-PASSWORD]` with your actual database password from Supabase.
+
+**For Vercel deployment**, see `VERCEL_SETUP.md` - you'll need to use connection pooling!
 
 ### 4. Create the Database Table (Using Prisma)
 
