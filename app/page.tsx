@@ -8,7 +8,6 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     fetchPosts()
@@ -27,7 +26,6 @@ export default function Home() {
         setLoading(false)
         return // Success, exit function
       } catch (err: any) {
-        setRetryCount(i + 1)
         if (i === retries - 1) {
           // Last retry failed
           setError(err.message)
@@ -51,9 +49,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="container">
-        <div className="loading">
-          {retryCount > 0 ? `Connecting... (attempt ${retryCount + 1}/3)` : 'Loading posts...'}
-        </div>
+        <div className="loading">Loading posts...</div>
       </div>
     )
   }
@@ -64,7 +60,7 @@ export default function Home() {
         <div className="error">
           <p>Error loading posts: {error}</p>
           <button 
-            onClick={() => { setRetryCount(0); fetchPosts(); }} 
+            onClick={() => fetchPosts()} 
             className="btn" 
             style={{ marginTop: '1rem', maxWidth: '200px' }}
           >
