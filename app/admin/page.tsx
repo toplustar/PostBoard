@@ -22,16 +22,25 @@ export default function AdminPage() {
     fetchPosts();
   }, []);
 
-  async function fetchPosts() {
-    try {
-      const response = await fetch("/api/posts");
-      if (!response.ok) throw new Error("Failed to fetch posts");
-      const data = await response.json();
-      setPosts(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setPostsLoading(false);
+  async function fetchPosts(retries = 3) {
+    setPostsLoading(true);
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch("/api/posts");
+        if (!response.ok) throw new Error("Failed to fetch posts");
+        const data = await response.json();
+        setPosts(data);
+        setPostsLoading(false);
+        return;
+      } catch (err: any) {
+        if (i === retries - 1) {
+          setError(err.message);
+          setPostsLoading(false);
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+        }
+      }
     }
   }
 

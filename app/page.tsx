@@ -8,21 +8,35 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     fetchPosts()
   }, [])
 
-  async function fetchPosts() {
-    try {
-      const response = await fetch('/api/posts')
-      if (!response.ok) throw new Error('Failed to fetch posts')
-      const data = await response.json()
-      setPosts(data)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  async function fetchPosts(retries = 3) {
+    setLoading(true)
+    setError(null)
+    
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch('/api/posts')
+        if (!response.ok) throw new Error('Failed to fetch posts')
+        const data = await response.json()
+        setPosts(data)
+        setLoading(false)
+        return // Success, exit function
+      } catch (err: any) {
+        setRetryCount(i + 1)
+        if (i === retries - 1) {
+          // Last retry failed
+          setError(err.message)
+          setLoading(false)
+        } else {
+          // Wait before retry (1s, 2s, 3s)
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
+        }
+      }
     }
   }
 
@@ -37,7 +51,9 @@ export default function Home() {
   if (loading) {
     return (
       <div className="container">
-        <div className="loading">Loading posts...</div>
+        <div className="loading">
+          {retryCount > 0 ? `Connecting... (attempt ${retryCount + 1}/3)` : 'Loading posts...'}
+        </div>
       </div>
     )
   }
@@ -45,7 +61,16 @@ export default function Home() {
   if (error) {
     return (
       <div className="container">
-        <div className="error">Error loading posts: {error}</div>
+        <div className="error">
+          <p>Error loading posts: {error}</p>
+          <button 
+            onClick={() => { setRetryCount(0); fetchPosts(); }} 
+            className="btn" 
+            style={{ marginTop: '1rem', maxWidth: '200px' }}
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
